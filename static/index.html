@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agentic Coder Control Room</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg-primary: #0e1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #1f2733;
+      --accent: #3d8bfd;
+      --accent-soft: rgba(61, 139, 253, 0.12);
+      --accent-strong: rgba(61, 139, 253, 0.25);
+      --text-primary: #e6edf3;
+      --text-muted: #8b949e;
+      --border: #30363d;
+      --success: #2ea043;
+      --warning: #f0883e;
+      --danger: #ff6b6b;
+      font-size: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at top, rgba(61, 139, 253, 0.15), transparent 55%), var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      animation: fadeIn 0.8s ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    header {
+      padding: 1.75rem 2rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(20, 25, 34, 0.9), rgba(20, 25, 34, 0.6));
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    header h1 span {
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    header p {
+      margin: 0.6rem 0 0;
+      color: var(--text-muted);
+      max-width: 720px;
+      line-height: 1.6;
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      padding: 1.5rem 2rem 2.5rem;
+    }
+
+    section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .section-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .section-header h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      letter-spacing: 0.01em;
+    }
+
+    .section-body {
+      padding: 1.25rem 1.5rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow: auto;
+    }
+
+    .model-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .pill-toggle {
+      display: inline-flex;
+      background: var(--bg-tertiary);
+      border-radius: 999px;
+      padding: 0.2rem;
+      border: 1px solid var(--border);
+    }
+
+    .pill-toggle button {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .pill-toggle button.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 0 6px var(--accent-soft);
+    }
+
+    select, textarea, input[type="text"], input[type="number"], button, .ingest-box {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      padding: 0.65rem 0.9rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+      font-family: inherit;
+    }
+
+    select:focus, textarea:focus, input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button.secondary {
+      background: transparent;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .chat-log {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+      max-height: 520px;
+    }
+
+    .chat-message {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1rem 1.15rem;
+      border-radius: 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid transparent;
+      animation: fadeIn 0.3s ease both;
+    }
+
+    .chat-message.user {
+      border-color: rgba(61, 139, 253, 0.25);
+      background: rgba(61, 139, 253, 0.08);
+      align-self: flex-end;
+    }
+
+    .chat-message.assistant {
+      border-color: rgba(110, 207, 151, 0.3);
+      background: rgba(46, 160, 67, 0.08);
+    }
+
+    .chat-message .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .chat-input {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: 1fr;
+    }
+
+    .chat-controls {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      display: inline-flex;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .memories {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .memory-card {
+      background: var(--bg-tertiary);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 1rem;
+      display: grid;
+      gap: 0.75rem;
+      animation: fadeIn 0.4s ease both;
+    }
+
+    .memory-card h3 {
+      margin: 0;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .memory-card .actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+
+    .context-pill {
+      font-size: 0.75rem;
+      color: var(--accent);
+      background: rgba(61, 139, 253, 0.12);
+      border-radius: 999px;
+      padding: 0.2rem 0.6rem;
+      border: 1px solid rgba(61, 139, 253, 0.22);
+      display: inline-flex;
+      gap: 0.4rem;
+      align-items: center;
+    }
+
+    .context-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      padding-top: 0.5rem;
+    }
+
+    .context-card {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 0.75rem 0.9rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      line-height: 1.5;
+    }
+
+    .status-banner {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      background: rgba(240, 136, 62, 0.12);
+      border: 1px solid rgba(240, 136, 62, 0.35);
+      color: #f5a76a;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(240, 136, 62, 0.28); }
+      70% { box-shadow: 0 0 0 12px rgba(240, 136, 62, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(240, 136, 62, 0); }
+    }
+
+    .ingest-box {
+      width: 100%;
+      min-height: 140px;
+      padding: 0.65rem 0.9rem;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    footer {
+      padding: 1rem 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      background: rgba(15, 19, 28, 0.85);
+      backdrop-filter: blur(6px);
+    }
+
+    @media (max-width: 1100px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Agentic Coder <span>Autonomous</span></h1>
+    <p>
+      Operate an advanced coding agent with persistent memory, semantic retrieval, and OpenRouter model routing.
+      Choose intelligence tier, iterate with RAG support, and govern critical changes through human-in-the-loop checkpoints.
+    </p>
+  </header>
+
+  <main>
+    <section id="workspace">
+      <div class="section-header">
+        <h2>Agent Console</h2>
+        <div class="model-controls">
+          <div class="pill-toggle" id="modelFilter">
+            <button data-filter="all" class="active">All</button>
+            <button data-filter="free">Free</button>
+            <button data-filter="paid">Paid</button>
+          </div>
+          <select id="modelSelect"></select>
+        </div>
+      </div>
+      <div class="section-body">
+        <div id="statusArea"></div>
+        <div class="chat-log" id="chatLog"></div>
+        <div class="section-divider"></div>
+        <div class="chat-input">
+          <textarea id="messageInput" placeholder="Describe the coding task or question..."></textarea>
+          <div class="chat-controls">
+            <label class="tag">
+              Temperature
+              <input type="number" id="temperature" min="0" max="2" step="0.1" value="0.2" style="width: 5rem; margin-left: 0.5rem;" />
+            </label>
+            <label class="tag">
+              Max Tokens
+              <input type="number" id="maxTokens" min="256" max="8192" step="256" placeholder="Auto" style="width: 6rem; margin-left: 0.5rem;" />
+            </label>
+            <button class="secondary" id="resetSession">Reset Session</button>
+            <button class="primary" id="sendMessage">Deploy Instruction</button>
+          </div>
+        </div>
+        <div>
+          <h3 style="margin-bottom: 0.5rem;">Context Used</h3>
+          <div class="context-feed" id="contextFeed"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="memoryPanel">
+      <div class="section-header">
+        <h2>Memory &amp; Knowledge Base</h2>
+      </div>
+      <div class="section-body">
+        <div class="memories">
+          <div class="memory-card">
+            <h3>Scratchpad <span class="tag">Short-Term</span></h3>
+            <textarea id="scratchpadField"></textarea>
+            <div class="actions">
+              <button class="secondary" data-memory="scratchpad">Save Scratchpad</button>
+            </div>
+          </div>
+          <div class="memory-card">
+            <h3>Main Plan <span class="tag">Long-Term</span></h3>
+            <textarea id="planField" style="min-height: 180px;"></textarea>
+            <div class="actions">
+              <button class="secondary" data-memory="plan">Save Plan</button>
+            </div>
+          </div>
+          <div class="memory-card">
+            <h3>Semantic Ingestion</h3>
+            <textarea class="ingest-box" id="ingestContent" placeholder="Paste code, documentation, or notes to add them into the agent's semantic memory."></textarea>
+            <input type="text" id="ingestSource" placeholder="Source label (optional)" />
+            <div class="actions">
+              <button class="primary" id="ingestButton">Ingest Content</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Agentic Coder &mdash; powered by OpenRouter, FastAPI, and sentence-transformer semantic recall.
+  </footer>
+
+  <script>
+    const state = {
+      models: [],
+      filter: 'all',
+      sessionId: 'default',
+      loading: false,
+    };
+
+    const chatLog = document.getElementById('chatLog');
+    const contextFeed = document.getElementById('contextFeed');
+    const messageInput = document.getElementById('messageInput');
+    const statusArea = document.getElementById('statusArea');
+    const scratchpadField = document.getElementById('scratchpadField');
+    const planField = document.getElementById('planField');
+
+    const renderStatus = (message, type = 'info') => {
+      statusArea.innerHTML = '';
+      if (!message) return;
+      const banner = document.createElement('div');
+      banner.className = 'status-banner';
+      banner.style.background = type === 'warning' ? 'rgba(240, 136, 62, 0.12)' : 'rgba(61, 139, 253, 0.12)';
+      banner.style.borderColor = type === 'warning' ? 'rgba(240, 136, 62, 0.35)' : 'rgba(61, 139, 253, 0.35)';
+      banner.textContent = message;
+      statusArea.appendChild(banner);
+    };
+
+    const appendMessage = (role, content) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = `chat-message ${role}`;
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.innerHTML = `<span>${role === 'user' ? 'You' : 'Agent'}</span><span>${new Date().toLocaleTimeString()}</span>`;
+      const body = document.createElement('div');
+      body.innerHTML = content.replace(/\n/g, '<br/>');
+      wrapper.appendChild(meta);
+      wrapper.appendChild(body);
+      chatLog.appendChild(wrapper);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    };
+
+    const updateContextFeed = (contexts = []) => {
+      contextFeed.innerHTML = '';
+      if (!contexts.length) {
+        contextFeed.innerHTML = '<div class="tag">No semantic contexts retrieved</div>';
+        return;
+      }
+      contexts.forEach((ctx) => {
+        const card = document.createElement('div');
+        card.className = 'context-card';
+        const source = ctx.metadata?.source || 'memory';
+        card.innerHTML = `<div class="context-pill">${source}</div><div>${ctx.content}</div>`;
+        contextFeed.appendChild(card);
+      });
+    };
+
+    const fetchModels = async () => {
+      try {
+        const res = await fetch('/api/models');
+        const data = await res.json();
+        state.models = data.models || [];
+        populateModelSelect();
+      } catch (error) {
+        renderStatus('Unable to load OpenRouter models. Check network or API key.', 'warning');
+      }
+    };
+
+    const populateModelSelect = () => {
+      const select = document.getElementById('modelSelect');
+      select.innerHTML = '';
+      const filtered = state.models.filter(model => state.filter === 'all' || model.category === state.filter);
+      filtered.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.id;
+        const pricing = model.pricing?.prompt === 0 && model.pricing?.completion === 0 ? 'Free' : 'Paid';
+        option.textContent = `${model.name || model.id} • ${pricing}`;
+        select.appendChild(option);
+      });
+      if (!filtered.length) {
+        const option = document.createElement('option');
+        option.textContent = 'No models available';
+        option.disabled = true;
+        select.appendChild(option);
+      }
+    };
+
+    const loadMemories = async () => {
+      const res = await fetch('/api/memory');
+      const data = await res.json();
+      scratchpadField.value = data.scratchpad || '';
+      planField.value = data.plan || '';
+    };
+
+    const sendMessage = async () => {
+      if (state.loading) return;
+      const message = messageInput.value.trim();
+      if (!message) return;
+      const model = document.getElementById('modelSelect').value;
+      const temperature = parseFloat(document.getElementById('temperature').value);
+      const maxTokensField = document.getElementById('maxTokens').value;
+      const maxTokens = maxTokensField ? parseInt(maxTokensField, 10) : null;
+
+      appendMessage('user', message);
+      messageInput.value = '';
+      state.loading = true;
+      renderStatus('Agent is reasoning with OpenRouter model…');
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: state.sessionId,
+            message,
+            model,
+            temperature,
+            max_tokens: maxTokens,
+          }),
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.detail || 'Agent request failed');
+        }
+
+        const data = await res.json();
+        appendMessage('assistant', data.reply || '[no response]');
+        updateContextFeed(data.context);
+        scratchpadField.value = data.scratchpad || '';
+        planField.value = data.plan || '';
+        const requiresConfirmation = data.metadata?.requires_human_confirmation;
+        renderStatus(
+          requiresConfirmation ? 'Agent requests human confirmation before proceeding.' : '',
+          requiresConfirmation ? 'warning' : 'info'
+        );
+      } catch (error) {
+        console.error(error);
+        renderStatus(error.message, 'warning');
+        appendMessage('assistant', `<span style="color: var(--danger);">Error: ${error.message}</span>`);
+      } finally {
+        state.loading = false;
+      }
+    };
+
+    const saveMemory = async (kind, content) => {
+      await fetch('/api/memory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind, content }),
+      });
+      renderStatus(`${kind === 'scratchpad' ? 'Scratchpad' : 'Plan'} saved.`);
+      setTimeout(() => renderStatus(''), 2000);
+    };
+
+    const ingestContent = async () => {
+      const content = document.getElementById('ingestContent').value.trim();
+      if (!content) return;
+      const source = document.getElementById('ingestSource').value.trim();
+
+      renderStatus('Embedding content into semantic memory…');
+      try {
+        const res = await fetch('/api/ingest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content, source }),
+        });
+        const data = await res.json();
+        renderStatus(`Content ingested. Document id: ${data.document_id}`);
+        document.getElementById('ingestContent').value = '';
+        document.getElementById('ingestSource').value = '';
+      } catch (error) {
+        console.error(error);
+        renderStatus('Failed to ingest content.', 'warning');
+      }
+    };
+
+    const resetSession = async () => {
+      await fetch('/api/session/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: state.sessionId }),
+      });
+      chatLog.innerHTML = '';
+      updateContextFeed([]);
+      renderStatus('Session reset. Memories preserved.');
+    };
+
+    document.getElementById('modelFilter').addEventListener('click', (event) => {
+      if (event.target.tagName !== 'BUTTON') return;
+      document.querySelectorAll('#modelFilter button').forEach((btn) => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      state.filter = event.target.dataset.filter;
+      populateModelSelect();
+    });
+
+    document.getElementById('sendMessage').addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+    document.getElementById('resetSession').addEventListener('click', resetSession);
+    document.getElementById('ingestButton').addEventListener('click', ingestContent);
+    document.querySelectorAll('.memory-card .actions button').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const kind = button.dataset.memory;
+        if (!kind) return;
+        const content = kind === 'scratchpad' ? scratchpadField.value : planField.value;
+        await saveMemory(kind, content);
+      });
+    });
+
+    (async () => {
+      await Promise.all([fetchModels(), loadMemories()]);
+      updateContextFeed([]);
+    })();
+  </script>
+</body>
+</html>
